@@ -1,5 +1,5 @@
 # easy.framework.elasticsearch
-easy to use elasticsearch for 7.X
+easy to use elasticsearch for 7.X  
 
 ```java
 ESWrappers<TestModelClass> entityWrapper = ESWrappers.<TestModelClass>build();
