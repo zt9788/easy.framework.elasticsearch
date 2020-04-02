@@ -143,7 +143,15 @@ public abstract class ESBaseMapper<T> {
         boolean succeeded = clearScrollResponse.isSucceeded();
         return succeeded;
     }
-    public ESPage<T> selectList(
+    public <T> T selectOne(ESWrappers<T> wrappers) throws Exception {
+        ESPage<T> page = selectList(wrappers);
+        if(page.getData() != null && page.getData().size()>0){
+            return page.getData().get(0);
+        }else{
+            return null;
+        }
+    }
+    public <T> ESPage<T> selectList(
             ESWrappers<T> wrappers
             ) throws Exception {
         int size = wrappers.getSize();
@@ -313,7 +321,7 @@ public abstract class ESBaseMapper<T> {
                         mapsource.put(entry.getKey(), sb.toString());
                     }
                 }
-                T o = JSONObject.parseObject(JSONObject.toJSONString(mapsource),this.getTClass());
+                T o = (T) JSONObject.parseObject(JSONObject.toJSONString(mapsource),this.getTClass());
                 list.add(o);
             }
             log.info(JSONObject.toJSONString(list));
@@ -331,7 +339,7 @@ public abstract class ESBaseMapper<T> {
         return esPage;
 //        return new ArrayList<>();
     }
-    private QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,ESWrappers<T> wrappers){
+    private QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,ESWrappers wrappers){
         //in,eq
         makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
         makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
