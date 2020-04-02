@@ -19,6 +19,21 @@ import java.util.concurrent.ConcurrentHashMap;
 //@Data
 @Getter
 public class ESWrappers<T> implements Serializable {
+    private Object[] searchAfterValue;
+    private boolean useSearchAfter;
+    public <T> ESWrappers<T> setUseSearchAfter(boolean useSearchAfter){
+        if(this.superClz != null)
+            throw new NullPointerException("在子查询中不能使用SearchAfter");
+        this.useSearchAfter = useSearchAfter;
+        return (ESWrappers<T>) this;
+    }
+    public <T> ESWrappers<T> setUseSearchAfter(boolean useSearchAfter,Object[] value){
+        if(this.superClz != null)
+            throw new NullPointerException("在子查询中不能使用SearchAfter");
+        this.useSearchAfter = useSearchAfter;
+        this.searchAfterValue = value;
+        return (ESWrappers<T>) this;
+    }
     private boolean useFilter = true;
     public <T> ESWrappers<T> setUseFilter(boolean useFilter){
         if(this.superClz != null)
