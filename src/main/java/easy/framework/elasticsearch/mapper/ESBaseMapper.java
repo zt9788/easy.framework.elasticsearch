@@ -160,7 +160,7 @@ public abstract class ESBaseMapper<T> {
         esPage.setCurrent(wrappers.getPage());
         esPage.setTotal(0L);
         esPage.setSize(size);
-        if(!wrappers.isUseScroll()) {
+        if(!wrappers.isUseScroll() && !wrappers.isUseSearchAfter()) {
             if (wrappers.getPage() * size > esProperties.getMaxResultWindow()) {
                 throw new Exception("当前分页数量:" + wrappers.getPage() * size + ",大于系统最大默认值:" + esProperties.getMaxResultWindow());
             }
@@ -170,8 +170,14 @@ public abstract class ESBaseMapper<T> {
             searchRequest.scroll(wrappers.getTimeValue());
         }
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.from((wrappers.getPage()-1)*size);
+        if(!wrappers.isUseSearchAfter())
+            searchSourceBuilder.from((wrappers.getPage()-1)*size);
+        else {
+            if(wrappers.getSearchAfterValue() != null && wrappers.getSearchAfterValue().length > 0)
+                searchSourceBuilder.searchAfter(wrappers.getSearchAfterValue());
+        }
         searchSourceBuilder.size(size);
+
         searchSourceBuilder.trackTotalHits(true);
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         RestHighLevelClient rhlClient = restHighLevelClient;
@@ -321,6 +327,8 @@ public abstract class ESBaseMapper<T> {
                         mapsource.put(entry.getKey(), sb.toString());
                     }
                 }
+                Object[] value = hit.getSortValues();
+                esPage.setAfterValue(value);
                 T o = (T) JSONObject.parseObject(JSONObject.toJSONString(mapsource),this.getTClass());
                 list.add(o);
             }

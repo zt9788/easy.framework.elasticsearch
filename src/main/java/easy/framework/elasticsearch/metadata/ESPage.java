@@ -19,4 +19,5 @@ public class ESPage<T> implements Serializable,Cloneable {
     private String scrollId;
     private String msg;
     private List<T> data;
+    private Object[] afterValue;
 }
