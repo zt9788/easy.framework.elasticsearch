@@ -63,7 +63,7 @@ import java.util.Map;
  */
 @Data
 @Slf4j
-@SuppressWarnings(value = {"rawstype","unused"})
+@SuppressWarnings(value = {"rawtypes","unused"})
 public abstract class ESBaseMapper<T> {
 
     @Autowired(required = false)
@@ -286,7 +286,8 @@ public abstract class ESBaseMapper<T> {
         return esPage;
 //        return new ArrayList<>();
     }
-    private QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,ESWrappers wrappers){
+    private <T> QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,
+                                   ESWrappers<T> wrappers){
         //in,eq
         makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
         makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
@@ -310,7 +311,8 @@ public abstract class ESBaseMapper<T> {
         }
         return boolQueryBuilder;
     }
-    private QueryBuilder makeNotNull(BoolQueryBuilder boolQueryBuilder,ESWrappers<T> wrappers){
+    private <T> QueryBuilder makeNotNull(BoolQueryBuilder boolQueryBuilder,
+                                         ESWrappers<T> wrappers){
         if(wrappers.getOr().getIsNotNull() != null && wrappers.getOr().getIsNotNull().size() > 0){
             for(String key:wrappers.getOr().getIsNotNull()) {
                 ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
@@ -326,7 +328,8 @@ public abstract class ESBaseMapper<T> {
         }
         return boolQueryBuilder;
     }
-    private QueryBuilder makeIsNull(BoolQueryBuilder boolQueryBuilder,ESWrappers<T> wrappers){
+    private <T> QueryBuilder makeIsNull(BoolQueryBuilder boolQueryBuilder
+            ,ESWrappers<T> wrappers){
         if(wrappers.getAnd().getIsNull() != null && wrappers.getAnd().getIsNull().size() > 0){
             BoolQueryBuilder bb = QueryBuilders.boolQuery();
             for(String key:wrappers.getOr().getIsNull()) {
@@ -359,14 +362,14 @@ public abstract class ESBaseMapper<T> {
 
         return boolQueryBuilder;
     }
-    private QueryBuilder filterOrMust(ESWrappers<? extends T> wrappers,BoolQueryBuilder boolQueryBuilder,QueryBuilder queryBuilder){
+    private <T> QueryBuilder filterOrMust(ESWrappers<T> wrappers,BoolQueryBuilder boolQueryBuilder,QueryBuilder queryBuilder){
         if(wrappers.isUseFilter())
             boolQueryBuilder.filter(queryBuilder);
         else
             boolQueryBuilder.must(queryBuilder);
         return boolQueryBuilder;
     }
-    private QueryBuilder makeAndRangeQuery(ESWrappers<? extends T> wrappers,
+    private <T> QueryBuilder makeAndRangeQuery(ESWrappers<T> wrappers,
                                            Map<String,List<ESRangeAttribute>> map,
                                            BoolQueryBuilder boolQueryBuilder
 //                                         ,Field field
@@ -415,8 +418,8 @@ public abstract class ESBaseMapper<T> {
         });
         return boolQueryBuilder;
     }
-    private QueryBuilder makeInQuery(
-                                    ESWrappers<? extends T> wrappers,
+    private <T> QueryBuilder makeInQuery(
+                                    ESWrappers<T> wrappers,
                                     Map<String,List<Object>> map,
                                      //Field field,
                                      BoolQueryBuilder boolQueryBuilder,

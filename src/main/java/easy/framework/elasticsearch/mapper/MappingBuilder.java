@@ -11,7 +11,6 @@ import easy.framework.elasticsearch.metadata.ESFieldType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,7 +27,6 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  * @Date: 2020/2/20.
  */
 @Slf4j
-@Component
 @SuppressWarnings(value = {"rawtypes","unused"})
 public class MappingBuilder {
 
