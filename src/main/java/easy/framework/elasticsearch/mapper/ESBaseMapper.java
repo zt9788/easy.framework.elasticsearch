@@ -9,7 +9,6 @@ import easy.framework.elasticsearch.config.ESProperties;
 import easy.framework.elasticsearch.metadata.ESFieldType;
 import easy.framework.elasticsearch.metadata.ESPage;
 import lombok.Data;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.ActionListener;
@@ -63,7 +62,7 @@ import java.util.Map;
  */
 @Data
 @Slf4j
-@SuppressWarnings(value = {"rawtypes","unused"})
+@SuppressWarnings(value = {"rawtypes","unused","UnusedReturnValue"})
 public abstract class ESBaseMapper<T> {
 
     @Autowired(required = false)
@@ -152,6 +151,32 @@ public abstract class ESBaseMapper<T> {
         }else{
             return null;
         }
+    }
+
+    private <T> QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,
+                                       ESWrappers<T> wrappers){
+        //in,eq
+        makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
+        makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
+        //like
+        makeInQuery(wrappers,wrappers.and().getLike(),boolQueryBuilder, true,ESBaseWrapper.QueryType.LIKE);
+        makeInQuery(wrappers,wrappers.or().getLike(),boolQueryBuilder, false,ESBaseWrapper.QueryType.LIKE);
+        //< <= > >=
+        makeAndRangeQuery(wrappers,wrappers.and().getRange(),boolQueryBuilder);//,field);
+        makeOrRangeQuery(wrappers.or().getRange(),boolQueryBuilder);//,field);
+        //is null
+        makeIsNull(boolQueryBuilder,wrappers);
+        //is not null
+        makeNotNull(boolQueryBuilder,wrappers);
+        if(wrappers.getSubCondition() != null && wrappers.getSubCondition().size() > 0) {
+            List<ESWrappers<T>> list = wrappers.getSubCondition();
+            list.forEach(item -> {
+                BoolQueryBuilder subQueryButilder = QueryBuilders.boolQuery();
+                makeQuery(subQueryButilder,item);
+                boolQueryBuilder.must(subQueryButilder);
+            });
+        }
+        return boolQueryBuilder;
     }
     public <T> ESPage<T> selectList(
             ESWrappers<T> wrappers
@@ -285,31 +310,6 @@ public abstract class ESBaseMapper<T> {
         }
         return esPage;
 //        return new ArrayList<>();
-    }
-    private <T> QueryBuilder makeQuery(BoolQueryBuilder boolQueryBuilder,
-                                   ESWrappers<T> wrappers){
-        //in,eq
-        makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
-        makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
-        //like
-        makeInQuery(wrappers,wrappers.and().getLike(),boolQueryBuilder, true,ESBaseWrapper.QueryType.LIKE);
-        makeInQuery(wrappers,wrappers.or().getLike(),boolQueryBuilder, false,ESBaseWrapper.QueryType.LIKE);
-        //< <= > >=
-        makeAndRangeQuery(wrappers,wrappers.and().getRange(),boolQueryBuilder);//,field);
-        makeOrRangeQuery(wrappers.or().getRange(),boolQueryBuilder);//,field);
-        //is null
-        makeIsNull(boolQueryBuilder,wrappers);
-        //is not null
-        makeNotNull(boolQueryBuilder,wrappers);
-        if(wrappers.getSubCondition() != null && wrappers.getSubCondition().size() > 0) {
-            List<ESWrappers<T>> list = wrappers.getSubCondition();
-            list.forEach(item -> {
-                BoolQueryBuilder subQueryButilder = QueryBuilders.boolQuery();
-                makeQuery(subQueryButilder,item);
-                boolQueryBuilder.must(subQueryButilder);
-            });
-        }
-        return boolQueryBuilder;
     }
     private <T> QueryBuilder makeNotNull(BoolQueryBuilder boolQueryBuilder,
                                          ESWrappers<T> wrappers){
@@ -644,12 +644,13 @@ public abstract class ESBaseMapper<T> {
         ESDocument document = this.getTClass().getAnnotation(ESDocument.class);
         return document.indexName().toLowerCase();
     }
+    @Deprecated
     public boolean update(T entity,ESBaseMapper<T> wrapper) throws Exception {
         UpdateRequest request = new UpdateRequest();
         String lang = "painless";
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         List<Field> list = MappingBuilder.getFields(entity.getClass());
-        list.stream().forEach(item->{
+        list.forEach(item->{
             Object obj = ESWrapperBuilder.getInfoValue(entity,item.getName());
             if(obj != null){
 
