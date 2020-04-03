@@ -2,10 +2,14 @@ package easy.framework.elasticsearch.mapper;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import easy.framework.elasticsearch.annotation.ESDocument;
+import easy.framework.elasticsearch.annotation.ESField;
 import easy.framework.elasticsearch.annotation.ElsHighlightField;
 import easy.framework.elasticsearch.config.ESProperties;
+import easy.framework.elasticsearch.metadata.ESFieldType;
 import easy.framework.elasticsearch.metadata.ESPage;
 import lombok.Data;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.ActionListener;
@@ -41,8 +45,6 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -183,69 +185,6 @@ public abstract class ESBaseMapper<T> {
         RestHighLevelClient rhlClient = restHighLevelClient;
         Field[] fs = this.getTClass().getDeclaredFields();
         makeQuery(boolQueryBuilder,wrappers);
-//        for(Field field:fs){
-//            if(!field.isAnnotationPresent(org.springframework.data.elasticsearch.annotations.Field.class)) {
-//                continue;
-//            }
-//            org.springframework.data.elasticsearch.annotations.Field f = field.getAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
-/*
-        //in,eq
-        makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
-        makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
-        //like
-        makeInQuery(wrappers,wrappers.and().getLike(),boolQueryBuilder, true,ESBaseWrapper.QueryType.LIKE);
-        makeInQuery(wrappers,wrappers.or().getLike(),boolQueryBuilder, false,ESBaseWrapper.QueryType.LIKE);
-        //< <= > >=
-        makeAndRangeQuery(wrappers,wrappers.and().getRange(),boolQueryBuilder);//,field);
-        makeOrRangeQuery(wrappers.or().getRange(),boolQueryBuilder);//,field);
-        //is null
-        makeIsNull(boolQueryBuilder,wrappers);
-        //is not null
-        makeNotNull(boolQueryBuilder,wrappers);
-//        }
-        if(wrappers.getAndOr() != null && wrappers.getAndOr().size() > 0){
-            List<ESWrappers<T>> list =  wrappers.getAndOr();
-            list.forEach(item->{
-                BoolQueryBuilder subQueryButilder = QueryBuilders.boolQuery();
-//            makeInQuery(wrappers,wrappers.getAnd(),null,subQueryButilder,true, ESBaseWrapper.QueryType.MATCH);
-                makeInQuery(item,item.or().getIn(),subQueryButilder, false,ESBaseWrapper.QueryType.MATCH);
-                makeIsNull(subQueryButilder,item);
-//            makeAndOr(subQueryButilder,)
-                boolQueryBuilder.must(subQueryButilder);
-            });
-        }
-*/
-//        if(wrappers.getOr().getIsNull() != null && wrappers.getOr().getIsNull().size() > 0){
-//            BoolQueryBuilder bb = QueryBuilders.boolQuery();
-//            for(String key:wrappers.getOr().getIsNull()) {
-//                ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
-//                bb.mustNot(orNotIn);
-//            }
-//            boolQueryBuilder.should(bb);
-//        }
-//        makeAndIsNull(boolQueryBuilder,wrappers);
-//        makeNotNull(boolQueryBuilder,wrappers);
-//        if(wrappers.getAnd().getIsNull() != null && wrappers.getAnd().getIsNull().size() > 0){
-//            BoolQueryBuilder bb = QueryBuilders.boolQuery();
-//            for(String key:wrappers.getOr().getIsNull()) {
-//                ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
-//                boolQueryBuilder.mustNot(orNotIn);
-//            }
-//            filterOrMust(wrappers,boolQueryBuilder,bb);
-//        }
-//        if(wrappers.getOr().getIsNotNull() != null && wrappers.getOr().getIsNotNull().size() > 0){
-//            for(String key:wrappers.getOr().getIsNotNull()) {
-//                ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
-//                boolQueryBuilder.should(orNotIn);
-//            }
-//        }
-//        if(wrappers.getAnd().getIsNotNull() != null && wrappers.getAnd().getIsNotNull().size() > 0){
-//            for(String key:wrappers.getAnd().getIsNotNull()) {
-//                ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
-////                boolQueryBuilder.must(orNotIn);
-//                filterOrMust(wrappers,boolQueryBuilder,orNotIn);
-//            }
-//        }
         searchSourceBuilder.query(boolQueryBuilder);
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         for(Field field:fs){
@@ -278,13 +217,13 @@ public abstract class ESBaseMapper<T> {
                 }
                 if(f == null)
                     throw new NullPointerException("order 不在类中");
-                org.springframework.data.elasticsearch.annotations.Field sf = f.getAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+                ESField sf = f.getAnnotation(ESField.class);
                 String type;
                 if(sf == null){
                     type = MappingBuilder.getElasticSearchMappingType(f.getType().getSimpleName().toLowerCase());
                 }else{
                     type = sf.type().toString().toLowerCase();
-                    if(sf.type() == FieldType.Text)
+                    if(sf.type() == ESFieldType.Text)
                         type = "text";//MappingBuilder.getElasticSearchMappingType(f.getType().getSimpleName().toLowerCase());
                 }
                 String order = k;
@@ -531,7 +470,7 @@ public abstract class ESBaseMapper<T> {
                                    boolean isAnd,
                                    ESBaseWrapper.QueryType type
     ){
-        org.springframework.data.elasticsearch.annotations.Field f = field.getAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+        ESField f = field.getAnnotation(ESField.class);
         if(keys != null && keys.size() != 0){
             for(KeyAttribute ka: keys){
                 if(ka.getKey().equals(field.getName())){
@@ -541,7 +480,7 @@ public abstract class ESBaseMapper<T> {
 //                        continue;;
                     if(!field.getType().equals(ka.getValue().getClass())){
                         if(field.getType().equals(Date.class)){
-                            if(f != null && f.type() == FieldType.Date && value != null && value instanceof Long){
+                            if(f != null && f.type() == ESFieldType.Date && value != null && value instanceof Long){
                                 value = new Date((long)value);
                             }
                         }
@@ -582,7 +521,7 @@ public abstract class ESBaseMapper<T> {
 
     public boolean createIndex(String indexName) throws Exception{
         Settings.Builder settings = Settings.builder();
-        Document document = this.getTClass().getAnnotation(Document.class);
+        ESDocument document = this.getTClass().getAnnotation(ESDocument.class);
         settings.put("index.number_of_shards",document.shards());
         settings.put("index.number_of_replicas",document.replicas());
         settings.put("index.max_result_window",2000000);
@@ -606,9 +545,9 @@ public abstract class ESBaseMapper<T> {
         return this.createIndex(this.getTClass());
     }
     public boolean createIndex(Class<? extends T> clz) throws Exception {
-        if(!clz.isAnnotationPresent(Document.class))
+        if(!clz.isAnnotationPresent(ESDocument.class))
             throw new Exception("必须有Document注解");
-        Document document = clz.getAnnotation(Document.class);
+        ESDocument document = clz.getAnnotation(ESDocument.class);
         String indexName = document.indexName().toLowerCase();
         return createIndex(indexName);
     }
@@ -618,9 +557,9 @@ public abstract class ESBaseMapper<T> {
         return this.deleteIndex(this.getIndexName());
     }
     public boolean deleteIndex(Class<? extends T> clz) throws Exception {
-        if(!clz.isAnnotationPresent(Document.class))
+        if(!clz.isAnnotationPresent(ESDocument.class))
             throw new Exception("必须有Document注解");
-        Document document = clz.getAnnotation(Document.class);
+        ESDocument document = clz.getAnnotation(ESDocument.class);
         String indexName = document.indexName().toLowerCase();
         return this.deleteIndex(indexName);
     }
@@ -699,7 +638,7 @@ public abstract class ESBaseMapper<T> {
     }
 
     private String getIndexName(){
-        Document document = this.getTClass().getAnnotation(Document.class);
+        ESDocument document = this.getTClass().getAnnotation(ESDocument.class);
         return document.indexName().toLowerCase();
     }
     public boolean update(T entity,ESBaseMapper<T> wrapper) throws Exception {

@@ -1,11 +1,11 @@
 package easy.framework.demo.bean;
 
+import easy.framework.elasticsearch.annotation.ESDocument;
+import easy.framework.elasticsearch.annotation.ESField;
 import easy.framework.elasticsearch.annotation.ElsDefaultValue;
 import easy.framework.elasticsearch.annotation.ElsId;
+import easy.framework.elasticsearch.metadata.ESFieldType;
 import lombok.Data;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -16,29 +16,29 @@ import java.util.Date;
  * @Date: 2020/2/26.
  */
 @Data
-@Document(indexName = "test_null_value")
+@ESDocument(indexName = "test_null_value")
 public class TestIndex {
     @ElsId(mutilField = true)
     private Long id;
 
-    @Field(type = FieldType.Text,analyzer = "comma",searchAnalyzer = "comma",fielddata = true)
+    @ESField(type = ESFieldType.Text,analyzer = "comma",searchAnalyzer = "comma",fielddata = true)
 //    @ElsDefaultValue("key1")
     private String key1;
-    @Field(type = FieldType.Keyword)
+    @ESField(type = ESFieldType.Keyword)
     @ElsDefaultValue("key2")
     private Date key2;
-    @Field(type = FieldType.Keyword)
+    @ESField(type = ESFieldType.Keyword)
     @ElsDefaultValue("key3")
     private String key3;
-    @Field
+    @ESField
     @ElsDefaultValue(value = "0")
     private Long key4;
 
-    @Field(type = FieldType.Keyword)
+    @ESField(type = ESFieldType.Keyword)
     private BigDecimal bd;
-    @Field(type=FieldType.Text)
+    @ESField(type=ESFieldType.Text)
     private BigDecimal bd2;
-    @Field(type= FieldType.Double)
+    @ESField(type= ESFieldType.Double)
     private BigDecimal dou;
 
 }

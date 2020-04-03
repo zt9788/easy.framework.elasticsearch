@@ -2,14 +2,15 @@ package easy.framework.elasticsearch.mapper;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import easy.framework.elasticsearch.annotation.ESField;
 import easy.framework.elasticsearch.annotation.ElsDefaultValue;
 import easy.framework.elasticsearch.annotation.ElsId;
 import easy.framework.elasticsearch.annotation.ElsSuggestKey;
+import easy.framework.elasticsearch.metadata.ESDateFormat;
+import easy.framework.elasticsearch.metadata.ESFieldType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
@@ -91,8 +92,8 @@ public class MappingBuilder {
                     }
                     mapping.endObject();
                 }
-                if (field.isAnnotationPresent(org.springframework.data.elasticsearch.annotations.Field.class)) {
-                    org.springframework.data.elasticsearch.annotations.Field elsSeacherKey = field.getAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+                if (field.isAnnotationPresent(ESField.class)) {
+                    ESField elsSeacherKey = field.getAnnotation(ESField.class);
                     ElsDefaultValue defaultValue = field.getAnnotation(ElsDefaultValue.class);
 //                    String[] ignos = elsSeacherKey.ignoreFields();
 //                    if(ignos.length > 0 && StringUtils.isNotBlank(ignos.toString())){
@@ -108,7 +109,7 @@ public class MappingBuilder {
                     }
                     */
                     String type;
-                    if (elsSeacherKey.type() == FieldType.Auto)
+                    if (elsSeacherKey.type() == ESFieldType.Auto)
                         type = getElasticSearchMappingType(field.getType().getSimpleName().toLowerCase());
                     else {
                         type = elsSeacherKey.type().name().toLowerCase();
@@ -124,11 +125,11 @@ public class MappingBuilder {
                                 .field("type","keyword")
                                 .field("ignore_above",256).endObject().endObject();
                     }
-                    if(type.equals("date") && DateFormat.custom == elsSeacherKey.format())
+                    if(type.equals("date") && ESDateFormat.custom == elsSeacherKey.format())
                         mapping.field("format",elsSeacherKey.pattern());
 
                     if (elsSeacherKey.fielddata()) {
-                        if(elsSeacherKey.type() != FieldType.Text)
+                        if(elsSeacherKey.type() != ESFieldType.Text)
                             throw new Exception("只有Text才需要标记这个属性");
                         mapping.field("fielddata", "true");
                     }
@@ -162,7 +163,7 @@ public class MappingBuilder {
                     }
                      */
                     if(defaultValue != null){// && !defaultValue.isNull()){
-                        if(elsSeacherKey != null && elsSeacherKey.type() == FieldType.Text)
+                        if(elsSeacherKey != null && elsSeacherKey.type() == ESFieldType.Text)
                             throw new Exception("ElsDefaultValue 注解必须是非Text属性");
                         mapping.field("null_value",defaultValue.value());
 //                        mapping.field("null_value","key1");
