@@ -11,6 +11,7 @@ import easy.framework.elasticsearch.metadata.ESPage;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -43,6 +44,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -60,16 +63,21 @@ import java.util.Map;
  * @description: elasticsearch crud
  * @Date: 2020/2/20.
  */
-@Data
-@Slf4j
 @SuppressWarnings(value = {"rawtypes","unused","UnusedReturnValue"})
 public abstract class ESBaseMapper<T> {
 
+    private static final Logger log = LoggerFactory.getLogger(ESBaseMapper.class);
     @Autowired(required = false)
     protected RestHighLevelClient restHighLevelClient;
+    public void setRestHighLevelClient(RestHighLevelClient restHighLevelClient){
+        this.restHighLevelClient = restHighLevelClient;
+    }
 
     @Autowired(required = false)
     protected ESProperties esProperties;
+    public void setEsProperties(ESProperties esProperties){
+        this.esProperties = esProperties;
+    }
 
     protected Class<T> getTClass() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
