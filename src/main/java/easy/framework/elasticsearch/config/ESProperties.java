@@ -18,4 +18,11 @@ public class ESProperties {
     private String uris;
     @Value("${spring.elasticsearch.index.max_result_window:10000}")
     private Long maxResultWindow;
+
+    private String certificatesType;
+    private String username;
+    private String password;
+    private String pkcsClientFilePath;
+    private String pemFilePath;
+    private boolean isOpenXPack;
 }
