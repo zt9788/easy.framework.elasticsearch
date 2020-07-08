@@ -1,10 +1,18 @@
 package easy.framework.elasticsearch.config;
 
 import easy.framework.elasticsearch.config.ESProperties;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.elasticsearch.client.Node;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -13,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -32,6 +41,7 @@ import java.util.List;
  * @Date: 2020/2/23.
  */
 @Slf4j
+@Data
 @Configuration
 public class ESConfiguration {
 
@@ -40,11 +50,15 @@ public class ESConfiguration {
 
     @Bean
     public RestHighLevelClient getRestHighLevelClient() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-//        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-//        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(esProperties.getUsername(), esProperties.getPassword()));
-//        KeyStore keyStore = getKeyStoreByType(esProperties.getCertificatesType());
-//        SSLContextBuilder sslContextBuilder = SSLContexts.custom().loadTrustMaterial(keyStore, (x509Certificates, s) -> true);
-//        final SSLContext sslContext = sslContextBuilder.build();
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(esProperties.getUsername(), esProperties.getPassword()));
+        SSLContext sslContext = null;
+        KeyStore keyStore = null;
+        if(StringUtils.isNotBlank(esProperties.getCertificatesType())) {
+            keyStore = getKeyStoreByType(esProperties.getCertificatesType());
+            SSLContextBuilder sslContextBuilder = SSLContexts.custom().loadTrustMaterial(keyStore, (x509Certificates, s) -> true);
+            sslContext = sslContextBuilder.build();
+        }
 
         String[] uri = esProperties.getUris().split(",");
         List<Node> list = new ArrayList<>();
@@ -58,11 +72,15 @@ public class ESConfiguration {
         if(list.size() > 0) {
             Node[] node = new Node[list.size()];
             node = list.toArray(node);
+            SSLContext finalSslContext = sslContext;
             RestClientBuilder builder = RestClient.builder(node).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
                 @Override
                 public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
-                    //TODO 等开了X-PACK
-//                    httpAsyncClientBuilder.setSSLContext(sslContext);
+                    //客户端SSL
+                    if(finalSslContext != null) {
+                        httpAsyncClientBuilder.setSSLContext(finalSslContext);
+                    }
+                    httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                     return httpAsyncClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.DEFAULT);
 
                 }
