@@ -1,7 +1,10 @@
 package easy.framework.elasticsearch;
 
+import com.alibaba.fastjson.JSONObject;
 import easy.framework.demo.bean.TestIndex;
 import easy.framework.demo.mapper.TestIndexMapper;
+import easy.framework.elasticsearch.config.ESConfiguration;
+import easy.framework.elasticsearch.config.ESProperties;
 import easy.framework.elasticsearch.mapper.ESWrappers;
 import easy.framework.elasticsearch.metadata.ESPage;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -14,6 +17,7 @@ import javax.annotation.Resource;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.math.BigDecimal;
 
 @Slf4j
 @SpringJUnitConfig
@@ -26,8 +30,25 @@ public class ElasticsearchApplicationTests {
 //	ElasticsearchRestTemplate elasticsearchRestTemplate;
 	@Test
 	void testES() throws Exception {
+		TestIndexMapper indexMapper = new TestIndexMapper();
+		ESProperties esProperties = new ESProperties();
+		esProperties.setUris("http://127.0.0.1/9500");
+		esProperties.setUsername("elastic");
+		esProperties.setPassword("123456");
+		esProperties.setMaxResultWindow(1000L);
+		ESConfiguration config = new ESConfiguration();
+		config.setEsProperties(esProperties);
+		indexMapper.setEsProperties(esProperties);
+		indexMapper.setRestHighLevelClient(config.getRestHighLevelClient());
+//		indexMapper.createIndex();
+		TestIndex ti = new TestIndex();
+		ti.setBd(new BigDecimal(11));
+		ti.setId(22L);
+		ti.setAbc("fdafsda");
+		indexMapper.insert(ti);
 		ESPage<TestIndex> page =indexMapper.selectList(ESWrappers.<TestIndex>build()
 				.setSize(2).setUseSearchAfter(true));
+		System.out.println(JSONObject.toJSONString(page));
 
 	}
 
