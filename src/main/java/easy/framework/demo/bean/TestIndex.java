@@ -16,7 +16,7 @@ import java.util.Date;
  * @Date: 2020/2/26.
  */
 @Data
-@ESDocument(indexName = "test_null_value")
+@ESDocument(indexName = "test_null_value2",alias = "test_x")
 public class TestIndex {
     @ElsId(mutilField = true)
     private Long id;
@@ -40,5 +40,9 @@ public class TestIndex {
     private BigDecimal bd2;
     @ESField(type= ESFieldType.Double)
     private BigDecimal dou;
+
+    private String abc;
+
+    private String dfe;
 
 }

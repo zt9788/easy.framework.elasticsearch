@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -47,6 +48,7 @@ import org.elasticsearch.search.sort.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -542,12 +544,16 @@ public abstract class ESBaseMapper<T> {
         settings.put("analysis.analyzer.comma.pattern",",");
 
         CreateIndexRequest request = new CreateIndexRequest(indexName);//创建索引
-//        request.alias(new Alias("IT_IS_ALIAS"));
+
         request.mapping(MappingBuilder.setMapping(this.getTClass(),true));
         request.settings(settings);
+        if(StringUtils.isNotBlank(document.alias())) {
+            request.alias(new Alias(document.alias()));
+        }
         RestHighLevelClient rhlClient = restHighLevelClient;
         log.info(request.toString());
         CreateIndexResponse createIndexResponse = rhlClient.indices().create(request, RequestOptions.DEFAULT);
+
         boolean acknowledged = createIndexResponse.isAcknowledged();//指示是否所有节点都已确认请求
         boolean shardsAcknowledged = createIndexResponse.isShardsAcknowledged();
         return acknowledged;
@@ -650,6 +656,8 @@ public abstract class ESBaseMapper<T> {
 
     private String getIndexName(){
         ESDocument document = this.getTClass().getAnnotation(ESDocument.class);
+        if(StringUtils.isNotBlank(document.alias()))
+            return document.alias().toLowerCase();
         return document.indexName().toLowerCase();
     }
     @Deprecated

@@ -15,6 +15,8 @@ import java.lang.annotation.*;
 public @interface ESDocument {
     String indexName();
 
+    String alias();
+
     String type() default "";
 
     boolean useServerConfiguration() default false;
