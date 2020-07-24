@@ -4,8 +4,10 @@ import easy.framework.elasticsearch.annotation.ESDocument;
 import easy.framework.elasticsearch.annotation.ESField;
 import easy.framework.elasticsearch.annotation.ElsDefaultValue;
 import easy.framework.elasticsearch.annotation.ElsId;
+import easy.framework.elasticsearch.metadata.ESDateFormat;
 import easy.framework.elasticsearch.metadata.ESFieldType;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -16,7 +18,7 @@ import java.util.Date;
  * @Date: 2020/2/26.
  */
 @Data
-@ESDocument(indexName = "test_null_value2",alias = "test_x")
+@ESDocument(indexName = "test_null_value3",alias = "test_x")
 public class TestIndex {
     @ElsId(mutilField = true)
     private Long id;
@@ -44,5 +46,9 @@ public class TestIndex {
     private String abc;
 
     private String dfe;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @ESField(format = ESDateFormat.custom,pattern = "yyyy-MM-dd HH:mm:ss || yyyy-MM-dd || yyyy/MM/dd HH:mm:ss|| yyyy/MM/dd ||epoch_millis")
+    private Date createDate;
 
 }

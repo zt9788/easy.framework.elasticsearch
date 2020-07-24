@@ -1,5 +1,7 @@
 package easy.framework.elasticsearch.annotation;
 
+import easy.framework.elasticsearch.metadata.ESFieldType;
+
 import java.lang.annotation.*;
 
 /**
@@ -12,5 +14,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface ElsId {
 //    boolean value() default true;
+    ESFieldType type() default ESFieldType.Auto;
     boolean mutilField() default false;
 }

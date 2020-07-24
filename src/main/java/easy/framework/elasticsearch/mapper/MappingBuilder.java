@@ -77,10 +77,15 @@ public class MappingBuilder {
                     String orgType = getElasticSearchMappingType(field.getType().getSimpleName().toLowerCase());
                     String type = orgType;
 //                    if(type.equals("text"))
-                        type = "keyword";
+                    if (elsId.type() == ESFieldType.Auto)
+                        type = getElasticSearchMappingType(field.getType().getSimpleName().toLowerCase());
+                    else {
+                        type = elsId.type().name().toLowerCase();
+                        if(type.equals("integer"))
+                            type = "long";
+                    }
                     mapping.startObject(name)
                             .field("type", type);
-//                            .field("fielddata",true)
                     if(elsId.mutilField()){
                         mapping.startObject("fields")
                                 .startObject(orgType)
