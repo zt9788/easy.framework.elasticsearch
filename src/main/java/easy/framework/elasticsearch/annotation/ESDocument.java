@@ -15,7 +15,7 @@ import java.lang.annotation.*;
 public @interface ESDocument {
     String indexName();
 
-    String alias();
+    String alias() default "";
 
     String type() default "";
 
