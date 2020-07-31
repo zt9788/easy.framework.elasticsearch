@@ -10,7 +10,11 @@ import easy.framework.elasticsearch.metadata.ESDateFormat;
 import easy.framework.elasticsearch.metadata.ESFieldType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.admin.cluster.storedscripts.PutStoredScriptRequest;
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -32,6 +36,9 @@ public class MappingBuilder {
 
     public static String DEFAULT_SUGGEDT_KEY_PREFIX = "suggest";
 
+    public static XContentBuilder setMapping(Class clz,boolean isAnn) throws Exception {
+        return setMapping(null,clz,isAnn);
+    }
     /**
      * 设置对象的ElasticSearch的Mapping
      *
@@ -39,12 +46,16 @@ public class MappingBuilder {
      * @param isAnn
      * @return
      */
-    public static XContentBuilder setMapping(Class clz,boolean isAnn) throws Exception {
+    public static XContentBuilder setMapping(XContentBuilder inMapping,Class clz,boolean isAnn) throws Exception {
 //        if(!isAnn) return setMapping(obj);
         List<Field> fieldList = getFields(clz);
-        XContentBuilder mapping = null;
+        XContentBuilder mapping = inMapping;
+        if (mapping == null){
 //        try {
             mapping = jsonBuilder().startObject().startObject("properties");
+        }else{
+            mapping.startObject("properties");
+        }
             for (Field field : fieldList) {
                 //修饰符是static的字段不处理
                 if (Modifier.isStatic(field.getModifiers())) {
@@ -130,7 +141,9 @@ public class MappingBuilder {
                     }
                     if(type.equals("date") && ESDateFormat.custom == elsSeacherKey.format())
                         mapping.field("format",elsSeacherKey.pattern());
-
+                    if(type.equals("nested")){
+                        mapping = setMapping(mapping,field.getType(),true);
+                    }
                     if (elsSeacherKey.fielddata()) {
                         if(elsSeacherKey.type() != ESFieldType.Text)
                             throw new Exception("只有Text才需要标记这个属性");
@@ -178,7 +191,11 @@ public class MappingBuilder {
 //                    mapping.endObject();
                 }
             }
-            mapping.endObject().endObject();
+            if(inMapping == null)
+                mapping.endObject().endObject();
+            else {
+                mapping.endObject();
+            }
             log.info(JSONObject.toJSONString(mapping));
             log.info(mapping.toString());
 //        } catch (IOException e) {
