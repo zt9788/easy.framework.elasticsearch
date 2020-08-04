@@ -762,7 +762,7 @@ public abstract class ESBaseMapper<T> {
     public Boolean deleteById(Serializable id) throws Exception {
         RestHighLevelClient rhlClient = restHighLevelClient;
         DeleteRequest deleteByQueryRequest = new DeleteRequest(getIndexName());
-        deleteByQueryRequest.routing("routing");
+//        deleteByQueryRequest.routing("routing");
         deleteByQueryRequest.timeout(TimeValue.timeValueMinutes(2)); //设置超时，等待所有节点确认索引删除（使用TimeValue形式）
         if(id.getClass().equals(this.getTClass())){
             id = (Serializable) MappingBuilder.getID(id);
@@ -771,6 +771,7 @@ public abstract class ESBaseMapper<T> {
         DeleteResponse delete;
         boolean result;
         delete = rhlClient.delete(deleteByQueryRequest, RequestOptions.DEFAULT);
+
         if(RestStatus.NOT_FOUND.equals(delete.status())){
             log.info("删除指定索引失败");
             result = false;
