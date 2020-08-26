@@ -37,6 +37,19 @@ public class ESQueryWrapper<T> extends ESBaseWrapper<T> implements Serializable 
         }
         return (ESWrappers<T>) this.esWrappers;
     }
+
+    private Map<String, List<Object>> ne = new ConcurrentHashMap<>();
+    public <T> ESWrappers<T> ne(String key,Object value){
+        if(ne.containsKey(key)){
+            in.get(key).add(value);
+        }else{
+            List<Object> list = new ArrayList<>();
+            list.add(value);
+            ne.put(key,list);
+        }
+        return (ESWrappers<T>) this.esWrappers;
+    }
+
     public <T> ESWrappers<T> in(String key,List<Object> values){
         if(in.containsKey(key)) {
             in.get(key).addAll(values);

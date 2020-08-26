@@ -168,6 +168,7 @@ public abstract class ESBaseMapper<T> {
         //in,eq
         makeInQuery(wrappers,wrappers.and().getIn(),boolQueryBuilder, true,ESBaseWrapper.QueryType.MATCH);
         makeInQuery(wrappers,wrappers.or().getIn(),boolQueryBuilder, false,ESBaseWrapper.QueryType.MATCH);
+        makeIsNe(boolQueryBuilder,wrappers);
         //like
         makeInQuery(wrappers,wrappers.and().getLike(),boolQueryBuilder, true,ESBaseWrapper.QueryType.LIKE);
         makeInQuery(wrappers,wrappers.or().getLike(),boolQueryBuilder, false,ESBaseWrapper.QueryType.LIKE);
@@ -338,6 +339,7 @@ public abstract class ESBaseMapper<T> {
         }
         return boolQueryBuilder;
     }
+
     private <T> QueryBuilder makeIsNull(BoolQueryBuilder boolQueryBuilder
             ,ESWrappers<T> wrappers){
         if(wrappers.getAnd().getIsNull() != null && wrappers.getAnd().getIsNull().size() > 0){
@@ -426,6 +428,26 @@ public abstract class ESBaseMapper<T> {
             });
 
         });
+        return boolQueryBuilder;
+    }
+    private <T> QueryBuilder makeIsNe(BoolQueryBuilder boolQueryBuilder
+            ,ESWrappers<T> wrappers){
+        if(wrappers.getAnd().getNe() != null && wrappers.getAnd().getNe().size() > 0){
+            BoolQueryBuilder bb = QueryBuilders.boolQuery();
+            wrappers.getAnd().getNe().forEach((k,v)->{
+                TermQueryBuilder orNotIn = QueryBuilders.termQuery(k,v);
+                boolQueryBuilder.mustNot(orNotIn);
+            });
+            filterOrMust(wrappers,boolQueryBuilder,bb);
+        }
+        if(wrappers.getOr().getNe() != null && wrappers.getOr().getNe().size() > 0){
+            BoolQueryBuilder bb = QueryBuilders.boolQuery();
+            wrappers.getAnd().getNe().forEach((k,v)->{
+                TermQueryBuilder orNotIn = QueryBuilders.termQuery(k,v);
+                bb.mustNot(orNotIn);
+            });
+            boolQueryBuilder.should(bb);
+        }
         return boolQueryBuilder;
     }
     private <T> QueryBuilder makeInQuery(
