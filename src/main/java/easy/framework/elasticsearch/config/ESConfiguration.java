@@ -21,7 +21,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -58,8 +60,11 @@ public class ESConfiguration {
             keyStore = getKeyStoreByType(esProperties.getCertificatesType());
             SSLContextBuilder sslContextBuilder = SSLContexts.custom().loadTrustMaterial(keyStore, (x509Certificates, s) -> true);
             sslContext = sslContextBuilder.build();
-        }
 
+        }
+        HostnameVerifier allHostsValid = (String hostname, SSLSession session) -> {
+            return true;
+        };
         String[] uri = esProperties.getUris().split(",");
         List<Node> list = new ArrayList<>();
         for (String url:uri){
@@ -81,6 +86,7 @@ public class ESConfiguration {
                         httpAsyncClientBuilder.setSSLContext(finalSslContext);
                     }
                     httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    httpAsyncClientBuilder.setSSLHostnameVerifier(allHostsValid);
                     return httpAsyncClientBuilder.setDefaultIOReactorConfig(IOReactorConfig.DEFAULT);
 
                 }
@@ -94,7 +100,7 @@ public class ESConfiguration {
     private KeyStore getKeyStoreByType(String type) throws KeyStoreException, CertificateException, NoSuchAlgorithmException {
         KeyStore keyStore = null;
         //TODO need change it
-        if (esProperties.getCertificatesType().equalsIgnoreCase(type)){
+        if (!"pem".equalsIgnoreCase(type)){
             keyStore = KeyStore.getInstance("pkcs12");
             try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(esProperties.getPkcsClientFilePath())) {
                 keyStore.load(is, "".toCharArray());
