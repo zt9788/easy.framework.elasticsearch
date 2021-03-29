@@ -262,7 +262,7 @@ public class MappingBuilder {
         return  result;
     }
     public static Object getID(Object entry){
-        String fieldName = MappingBuilder.findKeyField(entry.getClass().getFields());
+        String fieldName = MappingBuilder.findKeyField(entry.getClass().getDeclaredFields());
         fieldName = "get"+ MappingBuilder.toUpperCaseFirstOne(fieldName);
         Method method;
         try {
