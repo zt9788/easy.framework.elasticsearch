@@ -344,7 +344,7 @@ public abstract class ESBaseMapper<T> {
             ,ESWrappers<T> wrappers){
         if(wrappers.getAnd().getIsNull() != null && wrappers.getAnd().getIsNull().size() > 0){
             BoolQueryBuilder bb = QueryBuilders.boolQuery();
-            for(String key:wrappers.getOr().getIsNull()) {
+            for(String key:wrappers.getAnd().getIsNull()) {
                 ExistsQueryBuilder orNotIn = QueryBuilders.existsQuery(key);
                 boolQueryBuilder.mustNot(orNotIn);
             }
